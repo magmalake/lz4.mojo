@@ -1,0 +1,10 @@
+[package]
+name = "lz4-shim"
+version = "0.1.0"
+description = "C FFI shim for lz4-mojo: liblz4mojo.{dylib,so}, dlopened at runtime"
+
+[package.build]
+backend = { name = "pixi-build-cmake", version = "*" }
+
+[package.host-dependencies]
+lz4-c = ">=1.9,<2"
