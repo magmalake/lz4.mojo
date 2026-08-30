@@ -1,5 +1,7 @@
 # lz4.mojo
 
+[![mojoshelf](https://mojoshelf.org/badge/lz4-mojo.svg)](https://mojoshelf.org/tins/lz4-mojo) [![mojo nightly](https://mojoshelf.org/badge/lz4-mojo/nightly.svg)](https://mojoshelf.org/tins/lz4-mojo)
+
 A Mojo binding to **liblz4** — block format and frame format, compress and
 decompress. A small C shim (`shim/lz4_wrapper.c`) is compiled to
 **`liblz4mojo.{dylib,so}`** and loaded through an `OwnedDLHandle`. No link
