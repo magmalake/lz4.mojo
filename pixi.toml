@@ -1,7 +1,7 @@
 [workspace]
 authors = ["Marius S <39998+winding-lines@users.noreply.github.com>"]
 name = "lz4.mojo"
-version = "0.1.0"
+version = "0.1.1"
 description = "A Mojo lz4 binding (block format and frame format, compress/decompress) via FFI to liblz4. Block format (LZ4_RAW) is a Parquet codec; frame format is the only codec Apache Iceberg allows in Puffin file footers."
 preview = ["pixi-build"]
 channels = [
@@ -38,7 +38,7 @@ stable = ["stable"]
 # import stays `from lz4 import …`.
 [package]
 name = "lz4-mojo"
-version = "0.1.0"
+version = "0.1.1"
 
 [package.build]
 backend = { name = "pixi-build-mojo", version = "0.*" }

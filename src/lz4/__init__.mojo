@@ -16,18 +16,22 @@ Two independent codecs live in one liblz4:
 Mirrors zlib.mojo's FFI pattern: a single-call C wrapper
 (shim/lz4_wrapper.c, built to $CONDA_PREFIX/lib/liblz4mojo.{dylib,so} by the
 lz4-shim pixi package) so Mojo never reads back internal library state after
-a foreign call. The `OwnedDLHandle` is passed as a borrowed (default-
-convention) parameter to each worker function, so Mojo's ASAP destruction
-can't `dlclose` the library before the C call inside that worker runs.
+a foreign call. The handle is opened **once per process** and never closed
+(`_LIB` below) — a `dlopen`/`dlclose` cycle costs hundreds of microseconds,
+far more than compressing a Parquet page, so opening one per call made the
+binding's fixed cost dwarf the work it wrapped. It is passed as a borrowed
+(default-convention) parameter to each worker function, so Mojo's ASAP
+destruction can't `dlclose` the library before the C call inside that worker
+runs.
 """
 
-from std.os import getenv
-from std.ffi import OwnedDLHandle, c_int, c_long_long
+from std.os import abort, getenv
+from std.ffi import _Global, OwnedDLHandle, c_int, c_long_long
 
 comptime _MAGIC_LE: SIMD[DType.uint8, 4] = [0x04, 0x22, 0x4D, 0x18]
 
 
-def _find_lib() raises -> OwnedDLHandle:
+def _open_lib() raises -> OwnedDLHandle:
     """Open liblz4mojo from `$CONDA_PREFIX/lib` (installed by the lz4-shim
     pixi package), else `build/` for a bare checkout. CMake names the shim
     with the platform's natural shared-library extension, so this tries
@@ -51,6 +55,30 @@ def _find_lib() raises -> OwnedDLHandle:
     raise Error(
         "lz4.mojo: could not load liblz4mojo (.dylib/.so) from " + base
     )
+
+
+def _open_lib_or_abort() -> OwnedDLHandle:
+    try:
+        return _open_lib()
+    except e:
+        abort(String(e))
+
+
+comptime _LIB = _Global["lz4_mojo_shim", _open_lib_or_abort]
+"""The shim handle, opened on first use and never closed.
+
+`dlopen`/`dlclose` is not free — on macOS a full open/close cycle of an
+already-resident library measures around 450 microseconds, orders of
+magnitude more than compressing or decompressing a Parquet page. One
+process-wide handle removes that fixed cost; `dlsym` on the cached handle
+costs ~400 ns. `_Global` initialises exactly once even under concurrent
+first use, so the handle is safe to reach from worker threads.
+"""
+
+
+def _lib() raises -> ref[MutUntrackedOrigin] OwnedDLHandle:
+    """The cached handle, borrowed. Never destroy the referent."""
+    return _LIB.get_or_create_ptr()[]
 
 
 def _ptr_of(data: Span[UInt8, _]) -> Int:
@@ -108,7 +136,7 @@ def compress_block(
         acceleration: >=1; higher trades compression ratio for speed
             (1 matches `LZ4_compress_default`).
     """
-    var lib = _find_lib()
+    ref lib = _lib()
     return _do_compress_block(lib, data, acceleration)
 
 
@@ -149,7 +177,7 @@ def compress_block_hc(
         data: Bytes to compress.
         level: 1..12 (LZ4HC_CLEVEL_MIN..MAX); higher is slower and smaller.
     """
-    var lib = _find_lib()
+    ref lib = _lib()
     return _do_compress_block_hc(lib, data, level)
 
 
@@ -181,7 +209,7 @@ def decompress_block_into(
 
     Returns the number of bytes written.
     """
-    var lib = _find_lib()
+    ref lib = _lib()
     return _do_decompress_block_into(lib, data, dst)
 
 
@@ -252,7 +280,7 @@ def compress_frame(
         content_size: Whether to record the uncompressed length in the
             frame header.
     """
-    var lib = _find_lib()
+    ref lib = _lib()
     return _do_compress_frame(lib, data, level, content_size)
 
 
@@ -271,7 +299,7 @@ def frame_content_size(data: Span[UInt8, _]) raises -> Optional[Int]:
     can't distinguish "unspecified" from a genuine zero-length payload —
     both are stored as 0), or raises if `data` isn't a valid frame header.
     """
-    var lib = _find_lib()
+    ref lib = _lib()
     var size = _do_frame_content_size(lib, data)
     if size < 0:
         raise Error("lz4.frame_content_size: not a valid LZ4 frame header")
@@ -321,7 +349,7 @@ def decompress_frame(data: Span[UInt8, _]) raises -> List[UInt8]:
     field to size the output buffer exactly when present (the case for
     every frame `compress_frame` produces, and the Puffin convention);
     otherwise grows the buffer and retries until the whole frame fits."""
-    var lib = _find_lib()
+    ref lib = _lib()
 
     var known_size = _do_frame_content_size(lib, data)
     var cap: Int
@@ -367,7 +395,7 @@ def decompress_hadoop(
     historically wrote for codec `LZ4`; new writers should use `LZ4_RAW`
     (`compress_block`/`decompress_block`) instead — see PARQUET-1974.
     """
-    var lib = _find_lib()
+    ref lib = _lib()
     var out = List[UInt8](capacity=uncompressed_size)
     var offset = 0
 

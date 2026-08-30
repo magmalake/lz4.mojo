@@ -1,5 +1,5 @@
 name = "lz4-mojo"
-version = "0.1.0"
+version = "0.1.1"
 description = "A Mojo lz4 binding (block + frame format) via FFI to liblz4"
 tags = ["lz4", "compression", "parquet", "iceberg", "puffin", "ffi"]
 # other tins this one depends on; omit if none

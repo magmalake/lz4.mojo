@@ -141,9 +141,17 @@ foreign call (`LZ4F_decompress`'s streaming loop runs entirely inside C).
 **Why a C shim, not calling liblz4 directly?** Same reasoning as zlib.mojo:
 a single-call API means Mojo never reads back state after a foreign call,
 and `dlopen`ing the shim at runtime means consumers never need `-l` link
-flags. The `OwnedDLHandle` is passed as a borrowed parameter to each worker
-function so Mojo's ASAP destruction can't `dlclose` the library before the
-C call inside that worker runs.
+flags. The handle is opened once per process and never closed, and is passed
+as a borrowed parameter to each worker function so Mojo's ASAP destruction
+can't `dlclose` the library before the C call inside that worker runs.
+
+Caching it matters more than it looks: on macOS a `dlopen`/`dlclose` cycle of
+an already-resident library costs around 450 µs, so opening one per call put
+a fixed ~450 µs floor under every `compress_block`/`decompress_block`. Against
+a Parquet page that is three orders of magnitude more than the compression
+itself — a 300-page file spent well over 100 ms in `dlopen` alone. The
+throughput table above barely moves (it compresses 64 MiB in one call), but
+page-sized calls got ~300x cheaper.
 
 ## Status / scope
 
