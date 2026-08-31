@@ -7,7 +7,7 @@ decompress. A small C shim (`shim/lz4_wrapper.c`) is compiled to
 **`liblz4mojo.{dylib,so}`** and loaded through an `OwnedDLHandle`. No link
 flags for consumers; the shim is `dlopen`ed at runtime.
 
-Part of **magmalake** — data lake building blocks in Mojo.
+Part of [**magmalake**](https://magmalake.org) — data lake building blocks in Mojo.
 
 ## Why lz4.mojo
 
