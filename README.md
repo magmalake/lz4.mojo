@@ -153,6 +153,13 @@ code is unchanged — only the measurement is.
 Rates are quoted against the **uncompressed** size in both directions, which
 is what a caller cares about: payload bytes moved per second.
 
+**What these numbers measure.** This tin is a binding, not an implementation
+— the compression is liblz4's, reached through the C shim below. The
+benchmark therefore measures liblz4 plus the per-call cost of crossing the
+FFI boundary, and at 64 MiB per call that crossing is noise. It is not a
+measurement of Mojo code, and a slow number here would be a question for
+liblz4 or for the binding, not for a codec written in this repo.
+
 ## Shim build
 
 `shim/` is a [pixi-build-cmake](https://pixi.sh) package: `CMakeLists.txt`
