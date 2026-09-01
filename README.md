@@ -124,20 +124,34 @@ CPython's `lz4.frame.decompress`.
 ## Perf
 
 ```sh
-pixi run bench    # MB/s on 64 MiB
+pixi run -e bench bench                 # the table below
+pixi run -e bench bench -- --json       # every repetition, for tracking
+pixi run -e bench bench -- --only bench_decompress_block
 ```
 
 Measured on an Apple Silicon (osx-arm64) M-series core, 64 MiB of highly
 compressible synthetic input (a repeating phrase, ~250x ratio) — LZ4's
 match-heavy fast path, so treat these as an upper bound rather than a
-prediction for real, less-repetitive column data:
+prediction for real, less-repetitive column data. Through
+[bench.mojo](https://github.com/magmalake/bench.mojo): mean of five timed
+repetitions, spread under 0.8% on every row.
 
 | Operation           | Throughput   |
 |----------------------|-------------:|
-| `compress_block`      | ~9.9 GB/s   |
-| `decompress_block`    | ~8.0 GB/s   |
-| `compress_frame`      | ~18.9 GB/s  |
-| `decompress_frame`    | ~18.6 GB/s  |
+| `compress_block`      | 25.3 GB/s   |
+| `decompress_block`    | 14.0 GB/s   |
+| `compress_frame`      | 24.3 GB/s   |
+| `decompress_frame`    | 20.8 GB/s   |
+
+**These are well above the figures published before 2026-09-01** (~9.9 /
+~8.0 / ~18.9 / ~18.6 GB/s), and `compress_block` more than doubled. The old
+bench timed one cold pass over a buffer it had just built, so it paid for
+first-touch page faults and a cold cache on every operation; at these speeds
+a 64 MiB pass is a couple of milliseconds and that setup cost dominated. The
+code is unchanged — only the measurement is.
+
+Rates are quoted against the **uncompressed** size in both directions, which
+is what a caller cares about: payload bytes moved per second.
 
 ## Shim build
 
