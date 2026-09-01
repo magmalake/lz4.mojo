@@ -1,0 +1,89 @@
+{
+  "hosts": {
+    "linux-x86_64-amd-epyc-9v74-80-core-processor-2c": {
+      "cpu": "AMD EPYC 9V74 80-Core Processor",
+      "os": "linux",
+      "arch": "x86_64",
+      "physical_cores": 2,
+      "logical_cores": 4,
+      "performance_cores": 2,
+      "memory_bytes": 16766414848,
+      "accelerator": false
+    }
+  },
+  "runs": [
+    {
+      "commit": "3c873a59c6985783032e43f2ed3512f50df11a62",
+      "short_commit": "3c873a5",
+      "timestamp": "2026-09-01T20:25:56Z",
+      "ref": "main",
+      "host": "linux-x86_64-amd-epyc-9v74-80-core-processor-2c",
+      "config": {
+        "min_runtime_secs": 1.0,
+        "num_warmup_iters": 2,
+        "num_repetitions": 5,
+        "max_iters": 100000000
+      },
+      "results": {
+        "bench_compress_block": {
+          "mean_ns": 7352579.920958084,
+          "min_ns": 7150046.964071856,
+          "max_ns": 7511815.011976048,
+          "median_ns": 7380281.461077845,
+          "stddev_ns": 136801.85714146675,
+          "iters": 167,
+          "reps": 5,
+          "throughput": 9.127253932828427,
+          "throughput_unit": "GB/s",
+          "throughput_metric": "bytes",
+          "throughput_count": 67108864
+        },
+        "bench_decompress_block": {
+          "mean_ns": 12391514.23877551,
+          "min_ns": 12249998.0,
+          "max_ns": 12653799.204081632,
+          "median_ns": 12350284.275510205,
+          "stddev_ns": 153057.69156842987,
+          "iters": 98,
+          "reps": 5,
+          "throughput": 5.415711325255394,
+          "throughput_unit": "GB/s",
+          "throughput_metric": "bytes",
+          "throughput_count": 67108864
+        },
+        "bench_compress_frame": {
+          "mean_ns": 10344799.286486486,
+          "min_ns": 10302568.387387387,
+          "max_ns": 10402597.18018018,
+          "median_ns": 10320907.945945946,
+          "stddev_ns": 45305.431687323486,
+          "iters": 111,
+          "reps": 5,
+          "throughput": 6.48720793332984,
+          "throughput_unit": "GB/s",
+          "throughput_metric": "bytes",
+          "throughput_count": 67108864
+        },
+        "bench_decompress_frame": {
+          "mean_ns": 8995510.527131785,
+          "min_ns": 8926583.937984496,
+          "max_ns": 9198664.364341086,
+          "median_ns": 8960446.379844962,
+          "stddev_ns": 114700.10161967058,
+          "iters": 129,
+          "reps": 5,
+          "throughput": 7.460261849240216,
+          "throughput_unit": "GB/s",
+          "throughput_metric": "bytes",
+          "throughput_count": 67108864
+        }
+      }
+    }
+  ],
+  "benchmarks": [
+    "bench_compress_block",
+    "bench_compress_frame",
+    "bench_decompress_block",
+    "bench_decompress_frame"
+  ]
+}
