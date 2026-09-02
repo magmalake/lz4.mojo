@@ -143,6 +143,13 @@ repetitions, spread under 0.8% on every row.
 | `compress_frame`      | 24.3 GB/s   |
 | `decompress_frame`    | 20.8 GB/s   |
 
+Every push to `main` re-runs these on a GitHub runner and appends to a history
+published at
+[magmalake.github.io/lz4.mojo/benchmarks](https://magmalake.github.io/lz4.mojo/benchmarks/).
+Those numbers are slower and noisier than the table above, which was taken on
+an M4 — each history is keyed by machine, so the two stay separate series and
+are never averaged together.
+
 **These are well above the figures published before 2026-09-01** (~9.9 /
 ~8.0 / ~18.9 / ~18.6 GB/s), and `compress_block` more than doubled. The old
 bench timed one cold pass over a buffer it had just built, so it paid for
