@@ -26,3 +26,36 @@ jobs:
 
       - name: Unit tests
         run: pixi run -e ${{ matrix.env }} test
+
+      - name: Lint (mojolint --lsp)
+        run: pixi run -e ${{ matrix.env }} lint
+
+  lint-bench:
+    # bench/ imports the shared harness (magmalake/bench.mojo) by source
+    # path, so linting it needs that repo checked out next door — unlike the
+    # `test` job above, this one lays both repos out under named paths.
+    name: lint bench / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: lz4.mojo
+
+      - uses: actions/checkout@v4
+        with:
+          repository: magmalake/bench.mojo
+          path: bench.mojo
+
+      - uses: prefix-dev/setup-pixi@v0.10.2
+        with:
+          pixi-version: v0.78.0
+          manifest-path: lz4.mojo/pixi.toml
+          environments: bench
+
+      - name: Lint bench (mojolint --lsp)
+        working-directory: lz4.mojo
+        run: pixi run -e bench lint-bench
