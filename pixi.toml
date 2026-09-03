@@ -15,12 +15,19 @@ lz4-c = ">=1.9,<2"
 # The FFI shim is a pixi package (shim/); pixi builds it and installs
 # lib/liblz4mojo.{dylib,so} into the env — no manual build step.
 lz4-shim = { path = "shim" }
+# Added by `pixi shelf add lint-mojo`: the linter comes from GitHub as a pixi
+# source dependency pinned at the revision mojoshelf published, and builds
+# the `mojolint` executable into every environment next to mojo-lsp-server.
+lint-mojo = { git = "https://github.com/magmalake/lint.mojo.git", rev = "2a12807b7847984aff2c8bf148b0eb7515a99844" }
 
 [tasks]
 # Round-trip gate: block + frame compress -> decompress -> original, plus
 # known-vector and corruption checks. The shim is dlopened at runtime from
 # $CONDA_PREFIX/lib, installed by the lz4-shim package.
 test = { cmd = "mkdir -p build && mojo build test/lz4_test.mojo -I src -o build/lz4-test && ./build/lz4-test" }
+# mojolint (lint-mojo, below): the origin and threading mistakes the compiler
+# lets through, with mojo-lsp-server behind the rules. Exit 1 on findings.
+lint = { cmd = "mojolint --lsp -I src src test" }
 
 [feature.nightly.dependencies]
 modular = ">=26.6.0.dev2026082605,<27"
@@ -38,6 +45,9 @@ bench-mojo = { git = "https://github.com/magmalake/bench.mojo", rev = "971759f58
 
 [feature.bench.tasks]
 bench = "mojo run -I src -I $CONDA_PREFIX/lib/mojo bench/bench_lz4.mojo"
+# bench/ imports the shared harness by source path (mojolint needs real
+# sources to resolve, not the precompiled package bench-mojo installs above).
+lint-bench = { cmd = "mojolint --lsp -I src -I ../bench.mojo/src bench" }
 
 [environments]
 default = ["nightly"]
