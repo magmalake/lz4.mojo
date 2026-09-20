@@ -30,16 +30,16 @@ test = { cmd = "mkdir -p build && mojo build test/lz4_test.mojo -I src -o build/
 lint = { cmd = "mojolint --lsp -I src src test" }
 
 [feature.nightly.dependencies]
-modular = ">=26.6.0.dev2026082605,<27"
+modular = ">=26.7.0.dev2026092005,<28"
 
 [feature.stable.dependencies]
-mojo-compiler = "==1.0.0"
+mojo-compiler = "==1.1.0"
 
 # Benchmarks run through the shared harness (magmalake/bench.mojo) and get
 # their own feature, so the tin stays out of the environments that run tests.
 # -I $CONDA_PREFIX/lib/mojo is what puts its precompiled package on the import
 # path. Stable only: a precompiled Mojo package is stamped with the compiler
-# version that built it and refused by any other, and tins build with 1.0.0.
+# version that built it and refused by any other, and tins build with 1.1.0.
 [feature.bench.dependencies]
 bench-mojo = { git = "https://github.com/magmalake/bench.mojo", rev = "4f4440fa6e61c9ca7c7573ca6aa2f8f1d606d88a" }
 
@@ -69,11 +69,11 @@ path = "src/lz4"
 name = "lz4"
 
 [package.host-dependencies]
-mojo-compiler = "==1.0.0"
+mojo-compiler = "==1.1.0"
 
 [package.build-dependencies]
-mojo-compiler = "==1.0.0"
+mojo-compiler = "==1.1.0"
 
 [package.run-dependencies]
-mojo-compiler = ">=1.0.0,<2"
+mojo-compiler = ">=1.1.0,<2"
 lz4-shim = { path = "shim" }
