@@ -39,12 +39,11 @@ def bench_compress_block(mut b: Benchmark) raises:
     var src = _pattern(SIZE)
     b.throughput(Metric.bytes(), SIZE)
 
-    @parameter
-    def call() raises:
+    def call() raises {imm src}:
         var block = compress_block(src)
         keep(block)
 
-    b.iter[call]()
+    b.iter(call)
     keep(src)
 
 
@@ -54,12 +53,11 @@ def bench_decompress_block(mut b: Benchmark) raises:
     # Rate is against the uncompressed size: payload bytes recovered/second.
     b.throughput(Metric.bytes(), SIZE)
 
-    @parameter
-    def call() raises:
+    def call() raises {imm block}:
         var back = decompress_block(block, SIZE)
         keep(back)
 
-    b.iter[call]()
+    b.iter(call)
     keep(src)
     keep(block)
 
@@ -68,12 +66,11 @@ def bench_compress_frame(mut b: Benchmark) raises:
     var src = _pattern(SIZE)
     b.throughput(Metric.bytes(), SIZE)
 
-    @parameter
-    def call() raises:
+    def call() raises {imm src}:
         var frame = compress_frame(src)
         keep(frame)
 
-    b.iter[call]()
+    b.iter(call)
     keep(src)
 
 
@@ -82,12 +79,11 @@ def bench_decompress_frame(mut b: Benchmark) raises:
     var frame = compress_frame(src)
     b.throughput(Metric.bytes(), SIZE)
 
-    @parameter
-    def call() raises:
+    def call() raises {imm frame}:
         var back = decompress_frame(frame)
         keep(back)
 
-    b.iter[call]()
+    b.iter(call)
     keep(src)
     keep(frame)
 
