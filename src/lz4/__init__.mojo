@@ -25,46 +25,43 @@ destruction can't `dlclose` the library before the C call inside that worker
 runs.
 """
 
-from std.os import abort, getenv
+from std.sys import CompilationTarget
+
+from ._dlopen import open_library
 from std.ffi import _Global, OwnedDLHandle, c_int, c_long_long
 
 comptime _MAGIC_LE: SIMD[DType.uint8, 4] = [0x04, 0x22, 0x4D, 0x18]
 
 
-def _open_lib() raises -> OwnedDLHandle:
-    """Open liblz4mojo from `$CONDA_PREFIX/lib` (installed by the lz4-shim
-    pixi package), else `build/` for a bare checkout. CMake names the shim
-    with the platform's natural shared-library extension, so this tries
-    `.dylib` then `.so`."""
-    var prefix = getenv("CONDA_PREFIX", "")
-    var base = String("")
-    if prefix == "":
-        base += "build/liblz4mojo"
-    else:
-        base += prefix
-        base += "/lib/liblz4mojo"
-
-    try:
-        return OwnedDLHandle(base + ".dylib")
-    except:
-        pass
-    try:
-        return OwnedDLHandle(base + ".so")
-    except:
-        pass
-    raise Error(
-        "lz4.mojo: could not load liblz4mojo (.dylib/.so) from " + base
-    )
+comptime _SHIM_FILE = (
+    "liblz4mojo.dylib" if CompilationTarget.is_macos() else "liblz4mojo.so"
+)
+"""The shim's file name: CMake gives it the platform's shared-library
+extension."""
 
 
-def _open_lib_or_abort() -> OwnedDLHandle:
-    try:
-        return _open_lib()
-    except e:
-        abort(String(e))
+struct _Shim(Movable):
+    """The process-wide shim handle, or why it couldn't be opened."""
+
+    var handle: Optional[OwnedDLHandle]
+    var error: String
+
+    def __init__(out self):
+        try:
+            self.handle = open_library("lz4.mojo", _SHIM_FILE)
+            self.error = String("")
+        except e:
+            self.handle = None
+            self.error = String(e)
 
 
-comptime _LIB = _Global["lz4_mojo_shim", _open_lib_or_abort]
+def _open_lib() -> _Shim:
+    """`dlopen` the shim, once, for the life of the process. A failure is
+    kept and raised by `_lib()` on every use, never an abort."""
+    return _Shim()
+
+
+comptime _LIB = _Global["lz4_mojo_shim", _open_lib]
 """The shim handle, opened on first use and never closed.
 
 `dlopen`/`dlclose` is not free — on macOS a full open/close cycle of an
@@ -77,8 +74,15 @@ first use, so the handle is safe to reach from worker threads.
 
 
 def _lib() raises -> ref[MutUntrackedOrigin] OwnedDLHandle:
-    """The cached handle, borrowed. Never destroy the referent."""
-    return _LIB.get_or_create_ptr()[]
+    """The cached handle, borrowed. Never destroy the referent.
+
+    Raises:
+        Error: If the shim can't be found (see `_dlopen.open_library`).
+    """
+    ref shim = _LIB.get_or_create_ptr()[]
+    if not shim.handle:
+        raise Error(shim.error)
+    return shim.handle.unsafe_value()
 
 
 def _ptr_of(data: Span[UInt8, _]) -> Int:
