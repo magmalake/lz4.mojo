@@ -24,7 +24,9 @@ lint-mojo = { git = "https://github.com/magmalake/lint.mojo.git", rev = "4a635f9
 # Round-trip gate: block + frame compress -> decompress -> original, plus
 # known-vector and corruption checks. The shim is dlopened at runtime from
 # $CONDA_PREFIX/lib, installed by the lz4-shim package.
-test = { cmd = "mkdir -p build && mojo build test/lz4_test.mojo -I src -o build/lz4-test && ./build/lz4-test" }
+# The second half runs the test binaries again with CONDA_PREFIX unset: the
+# shim must then be found through the binary's rpath, as from a plain shell.
+test = { cmd = "mkdir -p build && mojo build test/lz4_test.mojo -I src -o build/lz4-test && mojo build test/dlopen_test.mojo -I src -o build/dlopen-test && ./build/lz4-test && ./build/dlopen-test && env -u CONDA_PREFIX ./build/lz4-test && env -u CONDA_PREFIX ./build/dlopen-test" }
 # mojolint (lint-mojo, below): the origin and threading mistakes the compiler
 # lets through, with mojo-lsp-server behind the rules. Exit 1 on findings.
 lint = { cmd = "mojolint --lsp -I src src test" }
