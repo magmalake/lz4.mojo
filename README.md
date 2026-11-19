@@ -113,8 +113,7 @@ input.
 ## Test
 
 ```sh
-pixi run test     # nightly (default env)
-pixi run -e stable test
+pixi run test     # Mojo 1.3.0.dev2026111805
 ```
 
 Covers block and frame round trips at 0 B, 1 B, 1 KiB, 1 MiB (compressible)
