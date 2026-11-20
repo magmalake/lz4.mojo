@@ -1,7 +1,7 @@
 [workspace]
 authors = ["Marius S <39998+winding-lines@users.noreply.github.com>"]
 name = "lz4.mojo"
-version = "0.1.4"
+version = "0.2.0"
 description = "A Mojo lz4 binding (block format and frame format, compress/decompress) via FFI to liblz4. Block format (LZ4_RAW) is a Parquet codec; frame format is the only codec Apache Iceberg allows in Puffin file footers."
 preview = ["pixi-build"]
 channels = [
@@ -23,7 +23,7 @@ lz4-shim = { path = "shim" }
 # Added by `pixi shelf add lint-mojo`: the linter comes from GitHub as a pixi
 # source dependency pinned at the revision mojoshelf published, and builds
 # the `mojolint` executable into every environment next to mojo-lsp-server.
-lint-mojo = { git = "https://github.com/magmalake/lint.mojo.git", rev = "4a635f9a0ca0b7b639cd3823534cf0b36ff63985" }
+lint-mojo = { git = "https://github.com/magmalake/lint.mojo.git", rev = "81cac02a78a8cfd48a9807dda68f8d7d2f013791" }
 
 [tasks]
 # Round-trip gate: block + frame compress -> decompress -> original, plus
@@ -58,7 +58,7 @@ bench = ["bench"]
 # import stays `from lz4 import …`.
 [package]
 name = "lz4-mojo"
-version = "0.1.4"
+version = "0.2.0"
 
 [package.build]
 backend = { name = "pixi-build-mojo", version = "0.*" }
